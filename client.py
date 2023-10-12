@@ -5,7 +5,8 @@ import threading
 import sys
 import pandas as pd
 
-channel = grpc.insecure_channel("localhost:5440" + sys.argv[1])
+#channel = grpc.insecure_channel("localhost:5440" + sys.argv[1])
+channel = grpc.insecure_channel("localhost:" + sys.argv[0])
 stub = modelserver_pb2_grpc.ModelServerStub(channel)
 coefsList =  list(map(int, sys.argv[1].split(",")))
 resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = coefsList))
