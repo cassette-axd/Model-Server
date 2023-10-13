@@ -3,4 +3,4 @@ RUN apt-get update && apt-get install -y python3 python3-pip
 RUN pip3 install grpcio==1.58.0 grpcio-tools==1.58.0 --break-system-packages
 # RUN pip install pandas
 COPY *.py /
-CMD ["python3", "/server.py", "/client.py"]
+CMD ["python3", "/server.py"]

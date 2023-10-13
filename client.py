@@ -6,10 +6,11 @@ import sys
 import pandas as pd
 
 #channel = grpc.insecure_channel("localhost:5440" + sys.argv[1])
-channel = grpc.insecure_channel("localhost:" + sys.argv[0])
+channel = grpc.insecure_channel("localhost:" + sys.argv[1])
 stub = modelserver_pb2_grpc.ModelServerStub(channel)
-coefsList =  list(map(int, sys.argv[1].split(",")))
-resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = coefsList))
+#coefsList =  list(map(int, sys.argv[1].split(",")))
+#resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = [1.0,2.0,3.0]))
+resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = [1.0,2.0,3.0]))
 
 #channel = grpc.insecure_channel("localhost:" + sys.argv[0])
 #stub = modelserver_pb2_grpc.ModelServerStub(channel)
@@ -30,12 +31,14 @@ def loopCSV(file):
     totalMisses = totalHits-total
 
 threads = []
-for n in range(2, sys.argv.count-1):
-    t = threading.Thread(target=loopCSV, args=sys.argv[n])
-    t.start()
-    threads.append(t)
-
-for i in threads:
-    threads[i].join()
+print(2, len(sys.argv)-1)
+try:
+    for n in range(2, len(sys.argv)-1):
+        t = threading.Thread(target=loopCSV, args=sys.argv[n])
+        t.start()
+        threads.append(t)
+finally:
+    for i in threads:
+        threads[i].join()
 
 mainThread.join()
