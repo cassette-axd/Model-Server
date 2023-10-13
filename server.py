@@ -11,7 +11,6 @@ class PredictionCache:
     
     def SetCoefs(coefs):
         # will store coefs in the PredictionCache object
-        print(coefs)
         cache.clear()
         new_coef = torch.tensor(coefs, dtype=float32) 
         initial_coefs = torch.transpose(new_coef, 0, 1)
@@ -22,8 +21,7 @@ class PredictionCache:
         with lock:
             hit = False
             X = round(X, 4)
-            #y = X @ coefs
-            y = X
+            y = X @ coefs
             X = tuple(X.flatten().tolist())
             if X in cache:
                 # HIT
@@ -44,6 +42,7 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
     cache = PredictionCache()
     def SetCoefs(self, request, context):
         try:
+            global cache
             cache.SetCoefs(request.coefs)
             return modelserver_pb2.SetCoefsResponse(error = "")
         except:
@@ -51,6 +50,7 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
     
     def Predict(self, request, context):
         try:
+            global cache
             predictY, predictHit = cache.Predict(request.X)
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")
         except:

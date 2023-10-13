@@ -24,17 +24,18 @@ def loopCSV(file):
     df = pd.read_csv(file)
     total = 0
     totalHits = 0
-    for index, row in df.iterrows:
-        y, hit = stub.Prediction(row)
+    for index, row in df.iterrows():
+        print(row)
+        y, hit = stub.Predict(row.astype('float32'))
+        print(y)
+        print(hit)
         if (hit):
-            totalHits += 1 
+            all_hits += 1
+        else:
+            all_misses +=1
         total += 1
-    totalMisses = total - totalHits
-    all_misses += totalMisses
-    all_hits += totalHis
 
 threads = []
-print( len(sys.argv)-1)
 try:
 #    if len(sys.argv) == 5:
 #        t1 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
@@ -61,6 +62,7 @@ try:
 #        t1.start()
 #        threads.append(t1)
     for n in range(3, len(sys.argv)):
+        print("created")
         t = threading.Thread(target=loopCSV, args=(sys.argv[n],))
         t.start()
         threads.append(t)
@@ -69,4 +71,6 @@ finally:
         i.join()
 
 mainThread.join()
-print(all_hits/all_hits + all_misses)
+print(all_hits)
+print(all_misses)
+print(all_hits/(all_hits + all_misses))
