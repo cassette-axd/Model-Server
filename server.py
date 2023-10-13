@@ -1,19 +1,19 @@
 import threading
 import modelserver_pb2_grpc, modelserver_pb2
+import pytorch
 
 class PredictionCache:
     cache_size = 10
     cache = {}
     evict_order = []
     lock = threading.Lock()
-
-    def __init__(self):
-        self.obj = None
+    initial_coefs = torch.tensor()
     
     def SetCoefs(coefs):
         # will store coefs in the PredictionCache object
         cache.clear()
-        self.obj = coefs
+        coefs = coefs.to(torch.float32)
+        initial_coefs = torch.transpose(coefs, 0, 1)
 
 
     def Predict(X):
@@ -23,7 +23,7 @@ class PredictionCache:
             X = round(X, 4)
             y = X @ coefs
             X = tuple(X.flatten().tolist())
-            if x in cache:
+            if X in cache:
                 # HIT
                 hit = True
                 df = cache[X]
