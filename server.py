@@ -25,6 +25,7 @@ class PredictionCache:
 
     def Predict(self, X):
         # will take a 2D tensor and use it to predict y values
+        # torch_X = torch.tensor(X)
         with self.lock:
             hit = False
             roundedX = torch.round(X, decimals=4)
@@ -56,24 +57,30 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
             global cache
             cache.SetCoefs(request.coefs)
             return modelserver_pb2.SetCoefsResponse(error = "")
-        except:
-            return modelserver_pb2.SetCoefsResponse(error = "ModelServer SetCoefs() failed")
+        except Exception as e:
+            print(e)
+            return modelserver_pb2.SetCoefsResponse(error = "ModelServer Predict() failed")
     
     def Predict(self, request, context):
         try:
             global cache
-            predictY, predictHit = cache.Predict(request.X)
+            torch_X = torch.tensor(request.X)
+            predictY, predictHit = cache.Predict(torch_X)
+            #predictY = predict_results[0]
+            #predictHit = predict_results[1]
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")
-        except:
-            return modelserver_pb2.PredictResponse(error = "ModelServer Predict() failed")
+        except Exception as e:
+            return modelserver_pb2.PredictResponse(error = e)
+            #return modelserver_pb2.PredictResponse(error = "ModelServer Predict() failed")
         
 
 # Server Code
 import grpc
 from concurrent import futures
-server = grpc.server(futures.ThreadPoolExecutor(max_workers=4), options=(('grpc.so_reuseport', 0),))
-modelserver_pb2_grpc.add_ModelServerServicer_to_server(ModelServer(), server)
-server.add_insecure_port("[::]:5440", )
-server.start()
-print("started")
-server.wait_for_termination()
+if __name__ == "__main__":
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=4), options=(('grpc.so_reuseport', 0),))
+    modelserver_pb2_grpc.add_ModelServerServicer_to_server(ModelServer(), server)
+    server.add_insecure_port("[::]:5440", )
+    server.start()
+    print("started")
+    server.wait_for_termination()
