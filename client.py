@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 
 #channel = grpc.insecure_channel("localhost:5440" + sys.argv[1])
-channel = grpc.insecure_channel("localhost:" + sys.argv[1])
+channel = grpc.insecure_channel(f"localhost:{sys.argv[1]}")
 stub = modelserver_pb2_grpc.ModelServerStub(channel)
 coefsList = list(map(float, sys.argv[2].split(",")))
 #coefsList = list(sys.argv[2])
@@ -32,13 +32,13 @@ def loopCSV(file):
         global all_hits
         global all_misses
         for index, row in df.iterrows():
-            print(row.tolist())
-
+            #print(row.tolist())
             #hit = True
             response_predict = stub.Predict(modelserver_pb2.PredictRequest(X = list(map(float, row.tolist()))))
-            print(response_predict)
+            #print(response_predict)
             #print(y)
-            #print(hit)
+            print(response_predict.y)
+            print(response_predict.hit)
             if (response_predict.hit):
                 all_hits += 1
             else:

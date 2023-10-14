@@ -1,7 +1,7 @@
 import threading
 import modelserver_pb2_grpc, modelserver_pb2
 import torch
-import numpy
+import numpy as np
 import pandas
 
 class PredictionCache:
@@ -33,7 +33,8 @@ class PredictionCache:
             coefs = torch.tensor(self.initial_coefs)
             coefs = coefs.to(torch.float32)
             tupleX = tuple(roundedX.flatten().tolist())
-            if tupleX in self.cache:
+            key_list = self.cache.keys()
+            if tupleX in key_list:
                 # HIT
                 hit = True
                 y = self.cache[tupleX]
@@ -41,7 +42,7 @@ class PredictionCache:
                 self.evict_order.append(tupleX)
             else:
                 y = X @ coefs
-                self.cache[tupleX] = y
+                self.cache[tupleX] = torch.round(y, decimals=4)
                 self.evict_order.append(tupleX)
                 if len(self.cache) > self.cache_size:
                     victim = self.evict_order.pop(0) # what has been in the queue the longest?
@@ -51,11 +52,12 @@ class PredictionCache:
 
 
 class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
-    cache = PredictionCache()
+    def __init__(self):
+        self.cache = PredictionCache()
+
     def SetCoefs(self, request, context):
         try:
-            global cache
-            cache.SetCoefs(request.coefs)
+            self.cache.SetCoefs(request.coefs)
             return modelserver_pb2.SetCoefsResponse(error = "")
         except Exception as e:
             print(e)
@@ -63,9 +65,8 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
     
     def Predict(self, request, context):
         try:
-            global cache
             torch_X = torch.tensor(request.X)
-            predictY, predictHit = cache.Predict(torch_X)
+            predictY, predictHit = self.cache.Predict(torch_X)
             #predictY = predict_results[0]
             #predictHit = predict_results[1]
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")

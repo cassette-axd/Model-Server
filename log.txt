@@ -1,15 +1,5 @@
 started
-name 'cache' is not defined
-Traceback (most recent call last):
-  File "/home/caseyreyes/project-3-perrito_p3/server.py", line 68, in Predict
-    predictY, predictHit = cache.Predict(torch_X)
-NameError: name 'cache' is not defined
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/caseyreyes/.local/lib/python3.10/site-packages/grpc/_server.py", line 552, in _call_behavior
-    response_or_iterator = behavior(argument, context)
-  File "/home/caseyreyes/project-3-perrito_p3/server.py", line 73, in Predict
-    return modelserver_pb2.PredictResponse(error = e)
-TypeError: bad argument type for built-in operation
+tensor([1., 2., 3.], dtype=torch.float64)
+tensor([1., 2., 3.], dtype=torch.float64)
+/home/caseyreyes/project-3-perrito_p3/server.py:33: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  coefs = torch.tensor(self.initial_coefs)
