@@ -15,7 +15,8 @@ coefsList =  list(map(float, sys.argv[2].split(",")))
 #channel = grpc.insecure_channel("localhost:" + sys.argv[0])
 #stub = modelserver_pb2_grpc.ModelServerStub(channel)
 
-#resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = coefsList))
+resp = stub.SetCoefs(modelserver_pb2.SetCoefsRequest(coefs = coefsList))
+print(resp)
 mainThread = threading.Thread()
 mainThread.start()
 all_hits = 0
@@ -25,10 +26,10 @@ def loopCSV(file):
     total = 0
     totalHits = 0
     for index, row in df.iterrows():
-        print(row)
-        y, hit = stub.Predict(row.astype('float32'))
-        print(y)
-        print(hit)
+        #print(row)
+        #y, hit = stub.Predict(row.astype('float32'))
+        #print(y)
+        #print(hit)
         if (hit):
             all_hits += 1
         else:
@@ -37,30 +38,6 @@ def loopCSV(file):
 
 threads = []
 try:
-#    if len(sys.argv) == 5:
-#        t1 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t1.start()
-#        threads.append(t1)
-
-#        t2 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t2.start()
-#        threads.append(t2)
-
-#        t3 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t3.start()
-#        threads.append(t3)
-#    else if len(sys.argv) == 4:
-#        t1 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t1.start()
-#        threads.append(t1)
-
-#        t2 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t2.start()
-#        threads.append(t2)
-#    else:
-#        t1 = threading.Thread(target=loopCSV, args=[sys.argv[n]])
-#        t1.start()
-#        threads.append(t1)
     for n in range(3, len(sys.argv)):
         print("created")
         t = threading.Thread(target=loopCSV, args=(sys.argv[n],))
@@ -73,4 +50,7 @@ finally:
 mainThread.join()
 print(all_hits)
 print(all_misses)
-print(all_hits/(all_hits + all_misses))
+if (all_misses + all_hits) == 0:
+    print(0)
+else:
+    print(hits/(all_misses + all_hits))

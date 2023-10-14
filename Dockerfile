@@ -10,5 +10,8 @@ RUN python3 -m pip install pandas --break-system-packages
 #RUN pip3 install pandas
 #RUN pip3 install numpy
 COPY *.py /
-COPY *.proto / 
+COPY *.proto /
+COPY workload/workload1.csv /
+COPY workload/workload2.csv /
+#var/run/workload/workload2.csv 
 CMD ["python3", "/server.py"]

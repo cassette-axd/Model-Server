@@ -1,43 +1,54 @@
 import threading
 import modelserver_pb2_grpc, modelserver_pb2
 import torch
+import numpy
+import pandas
 
 class PredictionCache:
-    cache_size = 10
-    cache = {}
-    evict_order = []
-    lock = threading.Lock()
-    initial_coefs = torch.tensor(0.0)
-    
-    def SetCoefs(coefs):
+
+    def __init__(self):
+        self.cache_size = 10
+        self.cache = {}
+        self.evict_order = []
+        self.lock = threading.Lock()
+        self.initial_coefs = torch.tensor(0)
+
+
+    def SetCoefs(self, coefs):
         # will store coefs in the PredictionCache object
-        cache.clear()
-        new_coef = torch.tensor(coefs, dtype=float32) 
-        initial_coefs = torch.transpose(new_coef, 0, 1)
+        self.cache.clear()
+        new_coef = torch.tensor(coefs, dtype=float)
+        self.initial_coefs = new_coef
+        print(new_coef)
+        print(self.initial_coefs)
 
 
-    def Predict(X):
+    def Predict(self, X):
         # will take a 2D tensor and use it to predict y values
-        with lock:
+        with self.lock:
             hit = False
-            X = round(X, 4)
-            y = X @ coefs
-            X = tuple(X.flatten().tolist())
-            if X in cache:
+            roundedX = torch.round(X, decimals=4)
+            X = roundedX.to(torch.float32)
+            coefs = torch.tensor(self.initial_coefs)
+            coefs = coefs.to(torch.float32)
+            tupleX = tuple(roundedX.flatten().tolist())
+            if tupleX in self.cache:
                 # HIT
                 hit = True
-                df = cache[X]
-                index = cache.index(X)
-                victim = evict_order.pop(index)
-                cache = cache.insert(0, X)
+                y = self.cache[tupleX]
+                self.evict_order.remove(tupleX)
+                self.evict_order.append(tupleX)
             else:
-                if len(cache) > cache_size:
-                    victim = evict_order.pop(0)
-                    cache.pop(victim)
-                cache[X] = df
+                y = X @ coefs
+                self.cache[tupleX] = y
+                self.evict_order.append(tupleX)
+                if len(self.cache) > self.cache_size:
+                    victim = self.evict_order.pop(0) # what has been in the queue the longest?
+                    self.cache.pop(victim)
+            #print(y.size())
+            return self.cache[tupleX], hit
 
-            return y, hit
-        
+
 class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
     cache = PredictionCache()
     def SetCoefs(self, request, context):
