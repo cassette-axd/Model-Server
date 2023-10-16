@@ -42,7 +42,8 @@ class PredictionCache:
                 self.evict_order.append(tupleX)
             else:
                 y = X @ coefs
-                self.cache[tupleX] = torch.round(y, decimals=4)
+                self.cache[tupleX] = y
+                #self.cache[tupleX] = torch.round(y, decimals=4)
                 self.evict_order.append(tupleX)
                 if len(self.cache) > self.cache_size:
                     victim = self.evict_order.pop(0) # what has been in the queue the longest?
