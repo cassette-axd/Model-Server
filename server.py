@@ -3,6 +3,7 @@ import modelserver_pb2_grpc, modelserver_pb2
 import torch
 import numpy as np
 import pandas
+import traceback
 
 class PredictionCache:
 
@@ -17,6 +18,7 @@ class PredictionCache:
     def SetCoefs(self, coefs):
         # will store coefs in the PredictionCache object
         self.cache.clear()
+        self.evict_order.clear()
         new_coef = torch.tensor(coefs, dtype=torch.float32)
         self.initial_coefs = new_coef
         print(new_coef)
@@ -54,6 +56,7 @@ class PredictionCache:
 
 class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
     def __init__(self):
+        print("initializing model server")
         self.cache = PredictionCache()
 
     def SetCoefs(self, request, context):
@@ -65,15 +68,20 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
             return modelserver_pb2.SetCoefsResponse(error = "ModelServer Predict() failed")
     
     def Predict(self, request, context):
+        print("request received")
         try:
+            print("inside try statement")
             torch_X = torch.tensor(request.X)
             predictY, predictHit = self.cache.Predict(torch_X)
             #predictY = predict_results[0]
             #predictHit = predict_results[1]
+            predictY = predictY.item()
+            print("predictY: ", predictY)
+            print("predictHit: ", predictHit)
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")
         except Exception as e:
-            return modelserver_pb2.PredictResponse(error = e)
-            #return modelserver_pb2.PredictResponse(error = "ModelServer Predict() failed")
+            return modelserver_pb2.PredictResponse(error = traceback.format_exc(e))
+            #return modelserver_pb2.PredictResponse(error = str(e))
         
 
 # Server Code
