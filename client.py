@@ -23,14 +23,14 @@ mainThread = threading.Thread()
 mainThread.start()
 all_hits = 0
 all_misses = 0
+total = 0
 lock = threading.Lock()
 def loopCSV(file):
     with lock:
-        df = pd.read_csv(file)
-        total = 0
-        totalHits = 0
+        df = pd.read_csv(file, header=None)
         global all_hits
         global all_misses
+        global total
         for index, row in df.iterrows():
             #print(row.tolist())
             #hit = True
@@ -42,8 +42,7 @@ def loopCSV(file):
             if (response_predict.hit):
                 all_hits += 1
             else:
-                all_misses +=1
-            total += 1
+                all_misses += 1
 
 threads = []
 try:

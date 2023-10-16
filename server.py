@@ -17,7 +17,7 @@ class PredictionCache:
     def SetCoefs(self, coefs):
         # will store coefs in the PredictionCache object
         self.cache.clear()
-        new_coef = torch.tensor(coefs, dtype=float)
+        new_coef = torch.tensor(coefs, dtype=torch.float32)
         self.initial_coefs = new_coef
         print(new_coef)
         print(self.initial_coefs)
@@ -32,7 +32,7 @@ class PredictionCache:
             X = roundedX.to(torch.float32)
             coefs = torch.tensor(self.initial_coefs)
             coefs = coefs.to(torch.float32)
-            tupleX = tuple(roundedX.flatten().tolist())
+            tupleX = tuple(X.flatten().tolist())
             key_list = self.cache.keys()
             if tupleX in key_list:
                 # HIT
@@ -42,7 +42,7 @@ class PredictionCache:
                 self.evict_order.append(tupleX)
             else:
                 y = X @ coefs
-                self.cache[tupleX] = torch.round(y, decimals=4)
+                self.cache[tupleX] = y
                 self.evict_order.append(tupleX)
                 if len(self.cache) > self.cache_size:
                     victim = self.evict_order.pop(0) # what has been in the queue the longest?
