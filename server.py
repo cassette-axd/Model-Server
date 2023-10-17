@@ -15,8 +15,8 @@ class PredictionCache:
         self.initial_coefs = torch.tensor(0)
 
 
-    def SetCoefs(self, coefs):
-        # will store coefs in the PredictionCache object
+    def SetCoefs(self, coefs): 
+        # Will store coefs in the PredictionCache object
         self.cache.clear()
         self.evict_order.clear()
         new_coef = torch.tensor(coefs, dtype=torch.float32)
@@ -26,31 +26,30 @@ class PredictionCache:
 
 
     def Predict(self, X):
-        # will take a 2D tensor and use it to predict y values
-        # torch_X = torch.tensor(X)
+        # Will take a 2D tensor and use it to predict y values
         with self.lock:
             hit = False
             roundedX = torch.round(X, decimals=4)
             X = roundedX.to(torch.float32)
-            coefs = torch.tensor(self.initial_coefs)
+            coefs = self.initial_coefs.clone().detach()
             coefs = coefs.to(torch.float32)
             tupleX = tuple(X.flatten().tolist())
             key_list = self.cache.keys()
             if tupleX in key_list:
-                # HIT
+                # Hit
                 hit = True
                 y = self.cache[tupleX]
                 self.evict_order.remove(tupleX)
                 self.evict_order.append(tupleX)
             else:
+                # Miss
                 y = X @ coefs
                 self.cache[tupleX] = y
-                #self.cache[tupleX] = torch.round(y, decimals=4)
                 self.evict_order.append(tupleX)
                 if len(self.cache) > self.cache_size:
-                    victim = self.evict_order.pop(0) # what has been in the queue the longest?
+                    victim = self.evict_order.pop(0)
                     self.cache.pop(victim)
-            #print(y.size())
+
             return self.cache[tupleX], hit
 
 
@@ -64,24 +63,16 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
             self.cache.SetCoefs(request.coefs)
             return modelserver_pb2.SetCoefsResponse(error = "")
         except Exception as e:
-            print(e)
-            return modelserver_pb2.SetCoefsResponse(error = "ModelServer Predict() failed")
+            return modelserver_pb2.SetCoefsResponse(error = "ModelServer SetCoefs() failed")
     
     def Predict(self, request, context):
-        print("request received")
         try:
-            print("inside try statement")
             torch_X = torch.tensor(request.X)
             predictY, predictHit = self.cache.Predict(torch_X)
-            #predictY = predict_results[0]
-            #predictHit = predict_results[1]
             predictY = predictY.item()
-            print("predictY: ", predictY)
-            print("predictHit: ", predictHit)
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")
         except Exception as e:
-            return modelserver_pb2.PredictResponse(error = traceback.format_exc(e))
-            #return modelserver_pb2.PredictResponse(error = str(e))
+            return modelserver_pb2.PredictResponse(error = "ModelServer Predict() failed")
         
 
 # Server Code
