@@ -72,7 +72,7 @@ class ModelServer(modelserver_pb2_grpc.ModelServerServicer):
             predictY = predictY.item()
             return modelserver_pb2.PredictResponse(y = predictY, hit = predictHit, error = "")
         except Exception as e:
-            return modelserver_pb2.PredictResponse(error = "ModelServer Predict() failed")
+            return modelserver_pb2.PredictResponse(error = traceback.format_exc(e))
         
 
 # Server Code
