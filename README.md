@@ -1,4 +1,6 @@
-# Overview
+# School Project: Covid-19 Death Prediction Model Server
+
+## Overview
 This school project simulates machine learning by predicting the number and pattern of deaths caused by covid-19 overtime based on given data. The application utilizes Stochastic Gradient Descent to train a PyTorch model and the model server uses multiple threads and caches the predictions (to save effort when the server is given the same inputs repeatedly). Additionally, the model server runs in a Docker container and receives requests over a network (via gRPC calls).
 
 ## Functionality
